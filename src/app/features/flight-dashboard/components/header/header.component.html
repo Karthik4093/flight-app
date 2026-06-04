@@ -1,0 +1,24 @@
+<mat-toolbar class="app-header" role="banner">
+  <div class="header-brand">
+    <mat-icon class="brand-icon" aria-hidden="true">flight</mat-icon>
+    <div class="brand-text">
+      <span class="brand-title">AeroTrack</span>
+      <span class="brand-subtitle">Operations Dashboard</span>
+    </div>
+  </div>
+  <div class="header-spacer"></div>
+  <div class="header-actions">
+    <span class="live-badge" aria-label="Live data">
+      <span class="live-dot"></span>
+      <span class="live-label">LIVE</span>
+    </span>
+    <button
+      mat-icon-button
+      [matTooltip]="themeService.theme() === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      (click)="themeService.toggleTheme()"
+      [attr.aria-label]="themeService.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      <mat-icon>{{ themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+  </div>
+</mat-toolbar>

@@ -1,0 +1,192 @@
+:host {
+  display: block;
+}
+
+// ── Table ──────────────────────────────────────────────────────────────────
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+}
+
+.flight-table {
+  width: 100%;
+  background: transparent !important;
+
+  th {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 0 10px;
+    white-space: nowrap;
+    color: var(--text-secondary);
+  }
+
+  td {
+    padding: 0 10px;
+  }
+}
+
+.flight-row {
+  cursor: pointer;
+  height: 52px;
+  transition: background 0.12s;
+
+  &:focus-visible {
+    outline: 2px solid var(--av-primary);
+    outline-offset: -2px;
+  }
+
+  &.selected-row {
+    background: var(--row-selected-bg) !important;
+    border-left: 3px solid var(--row-selected-border);
+  }
+}
+
+// Flight # cell
+.flight-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fi-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--av-primary);
+  flex-shrink: 0;
+}
+
+.flight-num { display: block; font-weight: 700; font-size: 0.88rem; }
+.callsign   { display: block; font-size: 0.7rem; color: var(--text-secondary); }
+.cell-text  { font-size: 0.82rem; }
+
+// Route cell
+.route-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iata      { font-weight: 800; font-size: 0.85rem; letter-spacing: 0.02em; }
+.route-arr { font-size: 14px; width: 14px; height: 14px; color: var(--text-secondary); }
+
+// Times cell
+.times-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.times-sep { color: var(--text-secondary); }
+
+// Chevron
+.chevron {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  transition: opacity 0.12s;
+}
+
+.flight-row:hover .chevron { opacity: 1; }
+
+// ── Empty / Loading ──────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 16px;
+  gap: 14px;
+  color: var(--text-secondary);
+
+  mat-icon { font-size: 52px; width: 52px; height: 52px; opacity: 0.35; }
+  p        { margin: 0; font-size: 0.95rem; }
+}
+
+// ── Mobile cards ──────────────────────────────────────────────────────────────
+.mobile-cards {
+  display: none;
+}
+
+.mc {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  background: var(--card-bg);
+
+  &:focus-visible { outline: 2px solid var(--av-primary); }
+  &:active        { opacity: 0.85; }
+
+  &.mc-selected {
+    border-color: var(--av-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--av-primary) 20%, transparent);
+  }
+}
+
+.mc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mc-id  { display: flex; flex-direction: column; }
+.mc-num { font-weight: 700; font-size: 0.95rem; }
+.mc-cs  { font-size: 0.72rem; color: var(--text-secondary); }
+
+.mc-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mc-ap {
+  display: flex;
+  flex-direction: column;
+
+  strong { font-size: 1.05rem; font-weight: 800; }
+  small  { font-size: 0.68rem; color: var(--text-secondary); }
+
+  &.mc-ap-dest { margin-left: auto; text-align: right; }
+}
+
+.mc-arrow {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.mc-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.mc-airline {
+  font-style: italic;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Responsive ──────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .table-wrap, mat-paginator { display: none !important; }
+  .mobile-cards { display: block; padding: 4px 0; }
+}

@@ -1,0 +1,47 @@
+<div class="map-wrap" role="region" aria-label="Flight tracking map">
+  <!-- Map canvas -->
+  <div #mapEl class="map-el"></div>
+
+  <!-- Floating controls -->
+  <div class="map-controls" role="toolbar" aria-label="Map controls">
+    <button
+      mat-mini-fab
+      color="primary"
+      matTooltip="Fit all flights"
+      aria-label="Fit all flights in view"
+      (click)="fitAll()"
+    >
+      <mat-icon>zoom_out_map</mat-icon>
+    </button>
+    <button
+      mat-mini-fab
+      [color]="showAirports() ? 'accent' : ''"
+      [class.ctrl-active]="showAirports()"
+      matTooltip="Toggle airport markers"
+      [attr.aria-label]="showAirports() ? 'Hide airport markers' : 'Show airport markers'"
+      (click)="toggleAirports()"
+    >
+      <mat-icon>local_airport</mat-icon>
+    </button>
+    <button
+      mat-mini-fab
+      [color]="showWeather() ? 'warn' : ''"
+      [class.ctrl-active]="showWeather()"
+      matTooltip="Toggle cloud overlay"
+      [attr.aria-label]="showWeather() ? 'Hide weather overlay' : 'Show weather overlay'"
+      (click)="toggleWeather()"
+    >
+      <mat-icon>cloud</mat-icon>
+    </button>
+  </div>
+
+  <!-- Legend -->
+  <div class="map-legend" role="img" aria-label="Map marker legend">
+    @for (e of legendEntries; track e.status) {
+      <div class="legend-item">
+        <span class="legend-dot" [style.background]="e.color"></span>
+        <span>{{ e.status }}</span>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,119 @@
+<!-- ── Desktop: single-row inline filters ── -->
+<div class="filters-desktop" role="search" aria-label="Flight search and filters">
+  <form [formGroup]="filterForm" class="filter-row" (ngSubmit)="$event.preventDefault()">
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ff-search">
+      <mat-label>Search flights</mat-label>
+      <input
+        matInput
+        formControlName="search"
+        placeholder="Flight no., airline, city…"
+        aria-label="Search flights"
+        autocomplete="off"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ff-field">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status" aria-label="Filter by status">
+        @for (s of statuses; track s) {
+          <mat-option [value]="s">{{ s }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ff-field">
+      <mat-label>Origin</mat-label>
+      <mat-select formControlName="origin" aria-label="Filter by origin">
+        @for (o of origins(); track o) {
+          <mat-option [value]="o">{{ o }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ff-field">
+      <mat-label>Destination</mat-label>
+      <mat-select formControlName="destination" aria-label="Filter by destination">
+        @for (d of destinations(); track d) {
+          <mat-option [value]="d">{{ d }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button
+      mat-stroked-button
+      type="button"
+      class="ff-clear"
+      (click)="clearFilters()"
+      aria-label="Clear all filters"
+      [disabled]="activeFilterCount() === 0"
+    >
+      <span class="ff-clear-inner">
+        <mat-icon>filter_list_off</mat-icon>
+        <span>Clear</span>
+        @if (activeFilterCount() > 0) {
+          <span class="ff-badge">{{ activeFilterCount() }}</span>
+        }
+      </span>
+    </button>
+
+  </form>
+</div>
+
+<!-- ── Mobile: accordion ── -->
+<div class="filters-mobile">
+  <mat-accordion>
+    <mat-expansion-panel class="filter-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title class="panel-title">
+          <mat-icon>filter_list</mat-icon>
+          <span>Search &amp; Filters</span>
+          @if (activeFilterCount() > 0) {
+            <span class="ff-badge mobile-badge">{{ activeFilterCount() }}</span>
+          }
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <form [formGroup]="filterForm" class="filter-col">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-w">
+          <mat-label>Search flights</mat-label>
+          <input matInput formControlName="search" placeholder="Flight no., airline, city…" autocomplete="off"/>
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-w">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-w">
+          <mat-label>Origin</mat-label>
+          <mat-select formControlName="origin">
+            @for (o of origins(); track o) {
+              <mat-option [value]="o">{{ o }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-w">
+          <mat-label>Destination</mat-label>
+          <mat-select formControlName="destination">
+            @for (d of destinations(); track d) {
+              <mat-option [value]="d">{{ d }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" class="full-w" (click)="clearFilters()">
+          <mat-icon>filter_list_off</mat-icon>
+          Clear All Filters
+        </button>
+      </form>
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>

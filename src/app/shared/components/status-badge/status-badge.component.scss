@@ -1,0 +1,25 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+// Each status class uses global CSS vars — fully dark-mode aware
+.status-active    { color: var(--status-active-color);    background: var(--status-active-bg); }
+.status-boarding  { color: var(--status-boarding-color);  background: var(--status-boarding-bg); }
+.status-scheduled { color: var(--status-scheduled-color); background: var(--status-scheduled-bg); }
+.status-delayed   { color: var(--status-delayed-color);   background: var(--status-delayed-bg); }
+.status-arrived   { color: var(--status-arrived-color);   background: var(--status-arrived-bg); }
+.status-cancelled { color: var(--status-cancelled-color); background: var(--status-cancelled-bg); }

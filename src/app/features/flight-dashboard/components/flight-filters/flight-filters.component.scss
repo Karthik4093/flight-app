@@ -1,0 +1,87 @@
+// ── Desktop layout ────────────────────────────────────────────────────────
+.filters-desktop { display: block; }
+.filters-mobile  { display: none; }
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.ff-search { flex: 2 1 220px; min-width: 0; }
+.ff-field  { flex: 1 1 140px; min-width: 0; }
+
+// Clear button — exact height to match the 56px outlined form fields
+.ff-clear {
+  flex-shrink: 0;
+  height: 56px;
+  padding: 0 16px;
+  white-space: nowrap;
+  border-radius: 8px !important;
+  transition: opacity 0.15s;
+
+  &:disabled { opacity: 0.45; }
+}
+
+// Inner wrapper for icon + text + badge layout
+.ff-clear-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Active-filter count badge on the clear button
+.ff-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--av-primary);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0 6px;
+  margin-left: 4px;
+}
+
+// ── Mobile layout ─────────────────────────────────────────────────────────
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: var(--av-primary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.mobile-badge {
+  margin-left: 4px;
+  background: var(--av-primary);
+}
+
+.filter-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.full-w { width: 100%; }
+
+@media (max-width: 768px) {
+  .filters-desktop { display: none; }
+  .filters-mobile  { display: block; }
+}
+
+// Intermediate — allow gentle wrap between 769–900px
+@media (min-width: 769px) and (max-width: 900px) {
+  .filter-row { flex-wrap: wrap; }
+  .ff-search  { flex-basis: 100%; }
+}

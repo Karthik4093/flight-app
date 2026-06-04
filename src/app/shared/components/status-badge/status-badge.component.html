@@ -1,0 +1,9 @@
+<span
+  class="status-badge"
+  [class]="badgeClass()"
+  [attr.aria-label]="'Flight status: ' + status()"
+  role="status"
+>
+  <mat-icon>{{ statusIcon() }}</mat-icon>
+  <span>{{ status() }}</span>
+</span>

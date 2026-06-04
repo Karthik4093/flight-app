@@ -1,0 +1,147 @@
+@if (!flight()) {
+  <div class="no-sel" role="status" aria-live="polite">
+    <mat-icon aria-hidden="true">touch_app</mat-icon>
+    <p>Select a flight from the list or map to view details</p>
+  </div>
+} @else {
+  <div
+    class="dp"
+    role="region"
+    [attr.aria-label]="'Details for flight ' + flight()!.flightNumber"
+  >
+    <!-- ── Header ── -->
+    <div class="dp-header">
+      <div class="dp-id">
+        <span class="dp-fn">{{ flight()!.flightNumber }}</span>
+        <span class="dp-cs">{{ flight()!.callsign }}</span>
+      </div>
+      <div class="dp-header-right">
+        <app-status-badge [status]="flight()!.status" />
+        <button
+          mat-icon-button
+          aria-label="Close flight details"
+          (click)="close()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <mat-divider />
+
+    <!-- ── Route visualisation ── -->
+    <div class="dp-route" aria-label="Route">
+      <div class="dp-ap">
+        <span class="dp-iata">{{ flight()!.originAirport.code }}</span>
+        <span class="dp-city">{{ flight()!.origin }}</span>
+        <span class="dp-apname">{{ flight()!.originAirport.name }}</span>
+      </div>
+
+      <div class="dp-route-mid" aria-hidden="true">
+        <mat-icon class="dp-plane">airplanemode_active</mat-icon>
+        <div class="dp-line">
+          <span class="dp-dot"></span>
+          <span class="dp-dash"></span>
+          <span class="dp-dot dp-dot-dest"></span>
+        </div>
+      </div>
+
+      <div class="dp-ap dp-ap-dest">
+        <span class="dp-iata">{{ flight()!.destinationAirport.code }}</span>
+        <span class="dp-city">{{ flight()!.destination }}</span>
+        <span class="dp-apname">{{ flight()!.destinationAirport.name }}</span>
+      </div>
+    </div>
+
+    <mat-divider />
+
+    <!-- ── Detail grid ── -->
+    <div class="dp-grid">
+      <div class="dp-item">
+        <mat-icon aria-hidden="true">schedule</mat-icon>
+        <div>
+          <span class="dp-lbl">Departure</span>
+          <span class="dp-val">{{ flight()!.estimatedDeparture | date:'HH:mm · MMM d' }}</span>
+        </div>
+      </div>
+      <div class="dp-item">
+        <mat-icon aria-hidden="true">flight_land</mat-icon>
+        <div>
+          <span class="dp-lbl">Arrival</span>
+          <span class="dp-val">{{ flight()!.estimatedArrival | date:'HH:mm · MMM d' }}</span>
+        </div>
+      </div>
+      <div class="dp-item">
+        <mat-icon aria-hidden="true">airplanemode_active</mat-icon>
+        <div>
+          <span class="dp-lbl">Aircraft</span>
+          <span class="dp-val">{{ flight()!.aircraftType }}</span>
+        </div>
+      </div>
+      <div class="dp-item">
+        <mat-icon aria-hidden="true">airlines</mat-icon>
+        <div>
+          <span class="dp-lbl">Airline</span>
+          <span class="dp-val">{{ flight()!.airline }}</span>
+        </div>
+      </div>
+      @if (flight()!.altitude) {
+        <div class="dp-item">
+          <mat-icon aria-hidden="true">height</mat-icon>
+          <div>
+            <span class="dp-lbl">Altitude</span>
+            <span class="dp-val">{{ flight()!.altitude!.toLocaleString() }} ft</span>
+          </div>
+        </div>
+        <div class="dp-item">
+          <mat-icon aria-hidden="true">speed</mat-icon>
+          <div>
+            <span class="dp-lbl">Ground Speed</span>
+            <span class="dp-val">{{ flight()!.speed }} kts</span>
+          </div>
+        </div>
+      }
+      @if (flight()!.gate && flight()!.gate !== '—') {
+        <div class="dp-item">
+          <mat-icon aria-hidden="true">door_front</mat-icon>
+          <div>
+            <span class="dp-lbl">Gate</span>
+            <span class="dp-val">{{ flight()!.gate }}</span>
+          </div>
+        </div>
+        <div class="dp-item">
+          <mat-icon aria-hidden="true">business</mat-icon>
+          <div>
+            <span class="dp-lbl">Terminal</span>
+            <span class="dp-val">{{ flight()!.terminal }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ── Delay banner ── -->
+    @if (flight()!.delay && flight()!.delay! > 0) {
+      <div class="dp-delay" role="alert">
+        <mat-icon aria-hidden="true">warning_amber</mat-icon>
+        <span>Delayed by <strong>{{ flight()!.delay }} min</strong></span>
+      </div>
+    }
+
+    <mat-divider />
+
+    <!-- ── Chips ── -->
+    <div class="dp-chips">
+      <mat-chip-set aria-label="Flight tags">
+        <mat-chip>{{ flight()!.originAirport.code }}</mat-chip>
+        <mat-chip>{{ flight()!.destinationAirport.code }}</mat-chip>
+        <mat-chip>{{ flight()!.aircraftType }}</mat-chip>
+        @switch (flight()!.status) {
+          @case ('Active')    { <mat-chip class="chip-active">In Flight</mat-chip> }
+          @case ('Boarding')  { <mat-chip class="chip-boarding">Boarding</mat-chip> }
+          @case ('Delayed')   { <mat-chip class="chip-delayed">Delayed</mat-chip> }
+          @case ('Cancelled') { <mat-chip class="chip-cancelled">Cancelled</mat-chip> }
+        }
+      </mat-chip-set>
+    </div>
+  </div>
+}

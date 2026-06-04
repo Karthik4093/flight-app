@@ -1,0 +1,68 @@
+<div class="dash-root">
+
+  <!-- ── Header ── -->
+  <app-header />
+
+  <!-- ── Main scrollable area ── -->
+  <main class="dash-main" role="main">
+
+    <!-- KPI Row -->
+    <section class="kpi-row" aria-label="Key performance indicators">
+      <app-kpi-card label="Total"     [value]="kpis().total"     icon="flight"                       color="#1565C0" />
+      <app-kpi-card label="Active"    [value]="kpis().active"    icon="airplanemode_active"           color="#2E7D32" />
+      <app-kpi-card label="Boarding"  [value]="kpis().boarding"  icon="airline_seat_recline_normal"  color="#0277BD" />
+      <app-kpi-card label="Delayed"   [value]="kpis().delayed"   icon="warning_amber"                color="#E65100" />
+      <app-kpi-card label="Arrived"   [value]="kpis().arrived"   icon="flight_land"                  color="#0277BD" />
+      <app-kpi-card label="Cancelled" [value]="kpis().cancelled" icon="cancel"                       color="#C62828" />
+    </section>
+
+    <!-- Filters -->
+    <section aria-label="Filters">
+      <mat-card class="filter-card">
+        <mat-card-content class="filter-content">
+          <app-flight-filters />
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <!-- List + Map grid -->
+    <section class="content-grid" aria-label="Flights and map">
+
+      <!-- Flight list panel -->
+      <mat-card class="panel list-panel">
+        <div class="list-header">
+          <span class="list-title">Flights</span>
+          <span class="list-count" aria-live="polite" aria-atomic="true">
+            {{ fs.filteredFlightsSignal().length }} result{{ fs.filteredFlightsSignal().length !== 1 ? 's' : '' }}
+          </span>
+        </div>
+        <div class="list-body">
+          <app-flight-list
+            [flights]="fs.filteredFlightsSignal()"
+            [isLoading]="fs.isLoading()"
+          />
+        </div>
+      </mat-card>
+
+      <!-- Map panel -->
+      <mat-card class="panel map-panel">
+        <div class="map-body">
+          <app-flight-map [flights]="fs.filteredFlightsSignal()" />
+        </div>
+      </mat-card>
+
+    </section>
+
+    <!-- Flight details — slides in when a flight is selected -->
+    @if (fs.selectedFlight()) {
+      <section class="details-section" aria-live="polite" aria-label="Selected flight details">
+        <mat-card class="panel details-panel">
+          <mat-card-content style="padding:0">
+            <app-flight-details [flight]="fs.selectedFlight()" />
+          </mat-card-content>
+        </mat-card>
+      </section>
+    }
+
+  </main>
+</div>

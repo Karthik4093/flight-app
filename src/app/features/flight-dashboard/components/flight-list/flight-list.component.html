@@ -1,0 +1,147 @@
+@if (isLoading()) {
+  <app-skeleton-loader [count]="6" [height]="48" [gap]="4" [radius]="6" />
+
+} @else if (flights().length === 0) {
+  <div class="empty-state" role="status" aria-live="polite">
+    <mat-icon aria-hidden="true">flight_off</mat-icon>
+    <p>No flights match your filters.</p>
+  </div>
+
+} @else {
+  <!-- ── Desktop table ── -->
+  <div class="table-wrap" role="region" aria-label="Flight list">
+    <table
+      mat-table
+      [dataSource]="pagedFlights()"
+      matSort
+      (matSortChange)="onSort($event)"
+      class="flight-table"
+      aria-label="Flights"
+    >
+      <!-- Flight # -->
+      <ng-container matColumnDef="flightNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Flight</th>
+        <td mat-cell *matCellDef="let flight">
+          <div class="flight-cell">
+            <span class="fi-dot" [attr.aria-hidden]="true"></span>
+            <div>
+              <span class="flight-num">{{ flight.flightNumber }}</span>
+              <span class="callsign">{{ flight.callsign }}</span>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Airline -->
+      <ng-container matColumnDef="airline">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Airline</th>
+        <td mat-cell *matCellDef="let flight">
+          <span class="cell-text">{{ flight.airline }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Route -->
+      <ng-container matColumnDef="route">
+        <th mat-header-cell *matHeaderCellDef scope="col">Route</th>
+        <td mat-cell *matCellDef="let flight">
+          <div class="route-cell">
+            <span class="iata">{{ flight.originAirport.code }}</span>
+            <mat-icon class="route-arr" aria-hidden="true">arrow_forward</mat-icon>
+            <span class="iata">{{ flight.destinationAirport.code }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Status -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Status</th>
+        <td mat-cell *matCellDef="let flight">
+          <app-status-badge [status]="flight.status" />
+        </td>
+      </ng-container>
+
+      <!-- Dep / Arr -->
+      <ng-container matColumnDef="times">
+        <th mat-header-cell *matHeaderCellDef scope="col">Dep / Arr</th>
+        <td mat-cell *matCellDef="let flight">
+          <div class="times-cell">
+            <span>{{ flight.estimatedDeparture | date:'HH:mm' }}</span>
+            <span class="times-sep" aria-hidden="true">→</span>
+            <span>{{ flight.estimatedArrival | date:'HH:mm' }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Chevron -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef scope="col" aria-label="Actions"></th>
+        <td mat-cell *matCellDef="let flight">
+          <mat-icon class="chevron" aria-hidden="true">chevron_right</mat-icon>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        class="flight-row"
+        [class.selected-row]="isSelected(row.id)"
+        (click)="selectFlight(row)"
+        (keydown.enter)="selectFlight(row)"
+        (keydown.space)="selectFlight(row); $event.preventDefault()"
+        tabindex="0"
+        role="row"
+        [attr.aria-selected]="isSelected(row.id)"
+        matRipple
+      ></tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="sortedFlights().length"
+    [pageSize]="pageSize()"
+    [pageIndex]="pageIndex()"
+    [pageSizeOptions]="[5, 10, 20]"
+    (page)="onPage($event)"
+    aria-label="Navigate pages"
+    showFirstLastButtons
+  />
+
+  <!-- ── Mobile cards (hidden on ≥769px) ── -->
+  <div class="mobile-cards" role="list" aria-label="Flight list">
+    @for (flight of flights(); track flight.id) {
+      <div
+        class="mc"
+        [class.mc-selected]="isSelected(flight.id)"
+        (click)="selectFlight(flight)"
+        (keydown.enter)="selectFlight(flight)"
+        tabindex="0"
+        role="listitem"
+        [attr.aria-label]="flight.flightNumber + ' · ' + flight.originAirport.code + ' to ' + flight.destinationAirport.code"
+      >
+        <div class="mc-top">
+          <div class="mc-id">
+            <span class="mc-num">{{ flight.flightNumber }}</span>
+            <span class="mc-cs">{{ flight.callsign }}</span>
+          </div>
+          <app-status-badge [status]="flight.status" />
+        </div>
+        <div class="mc-route">
+          <div class="mc-ap">
+            <strong>{{ flight.originAirport.code }}</strong>
+            <small>{{ flight.origin }}</small>
+          </div>
+          <mat-icon class="mc-arrow" aria-hidden="true">arrow_forward</mat-icon>
+          <div class="mc-ap mc-ap-dest">
+            <strong>{{ flight.destinationAirport.code }}</strong>
+            <small>{{ flight.destination }}</small>
+          </div>
+        </div>
+        <div class="mc-foot">
+          <span>{{ flight.estimatedDeparture | date:'HH:mm' }} → {{ flight.estimatedArrival | date:'HH:mm' }}</span>
+          <span class="mc-airline">{{ flight.airline }}</span>
+        </div>
+      </div>
+    }
+  </div>
+}

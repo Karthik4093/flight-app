@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroTrack — Design Explanation</title>
+<style>
+  /* ── Reset & base ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #1a1a2e;
+    background: #fff;
+  }
+
+  /* ── Print layout ─────────────────────────────────────── */
+  @page {
+    size: A4;
+    margin: 16mm 18mm 14mm 18mm;
+  }
+
+  @media print {
+    body { font-size: 9.5pt; }
+    .page-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* ── Screen wrapper ───────────────────────────────────── */
+  .doc {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 28px;
+  }
+
+  /* ── Header band ──────────────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #1976d2 100%);
+    color: #fff;
+    border-radius: 10px;
+    padding: 22px 28px 18px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .header-icon {
+    font-size: 2.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header-text p {
+    margin-top: 4px;
+    opacity: 0.88;
+    font-size: 10pt;
+  }
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .badge {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 8.5pt;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Two-column layout ────────────────────────────────── */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .cols-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Section card ─────────────────────────────────────── */
+  .card {
+    border: 1.5px solid #e3eaf6;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card h2 {
+    font-size: 9.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #0d47a1;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card h2 .icon { font-size: 11pt; }
+
+  /* ── Full-width card ──────────────────────────────────── */
+  .card-full {
+    border: 1.5px solid #e3eaf6;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .card-full h2 {
+    font-size: 9.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #0d47a1;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-full h2 .icon { font-size: 11pt; }
+
+  /* ── Stack list ───────────────────────────────────────── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+  }
+  .stack-item {
+    background: #f0f4ff;
+    border-radius: 6px;
+    padding: 7px 10px;
+  }
+  .stack-item .lib { font-weight: 700; font-size: 9pt; color: #1565c0; }
+  .stack-item .ver { font-size: 7.5pt; color: #555; margin-top: 1px; }
+  .stack-item .role { font-size: 8pt; color: #333; margin-top: 2px; }
+
+  /* ── Component tree ───────────────────────────────────── */
+  .comp-tree {
+    font-size: 8.5pt;
+    line-height: 1.7;
+  }
+  .comp-tree .root {
+    font-weight: 700;
+    color: #0d47a1;
+  }
+  .comp-tree .group {
+    margin-left: 12px;
+    border-left: 2px solid #c5d5f5;
+    padding-left: 10px;
+    margin-top: 2px;
+  }
+  .comp-tree .item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 1px 0;
+  }
+  .comp-tree .item .name {
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .comp-tree .item .note {
+    color: #666;
+    font-size: 7.8pt;
+  }
+  .comp-tree .sub {
+    margin-left: 14px;
+    border-left: 1.5px dotted #d0d8ee;
+    padding-left: 8px;
+  }
+
+  /* ── Data flow diagram ────────────────────────────────── */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    font-size: 8pt;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    flex: 1;
+    min-width: 90px;
+    background: #f0f4ff;
+    border: 1.5px solid #c5d5f5;
+    border-radius: 6px;
+    padding: 7px 10px;
+    text-align: center;
+  }
+  .flow-box .fb-title {
+    font-weight: 700;
+    font-size: 8pt;
+    color: #0d47a1;
+    margin-bottom: 2px;
+  }
+  .flow-box .fb-sub {
+    font-size: 7pt;
+    color: #555;
+    line-height: 1.4;
+  }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: #1565c0;
+    font-size: 14pt;
+    flex-shrink: 0;
+  }
+
+  /* ── Decision list ────────────────────────────────────── */
+  .decision-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .decision-list li {
+    background: #f9fbff;
+    border-left: 3px solid #1565c0;
+    border-radius: 0 6px 6px 0;
+    padding: 6px 10px;
+    font-size: 8.5pt;
+  }
+  .decision-list li strong {
+    display: block;
+    color: #0d47a1;
+    margin-bottom: 2px;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  /* ── Status legend ────────────────────────────────────── */
+  .status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .status-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 7.8pt;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Footer ───────────────────────────────────────────── */
+  .footer {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1.5px solid #e3eaf6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.8pt;
+    color: #888;
+  }
+  .footer strong { color: #0d47a1; }
+
+  /* ── Print button (screen only) ───────────────────────── */
+  .print-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: #1565c0;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 10pt;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(21,101,192,0.4);
+    z-index: 999;
+  }
+  .print-btn:hover { background: #0d47a1; }
+  @media print { .print-btn { display: none; } }
+</style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">⬇ Export PDF</button>
+
+<div class="doc">
+
+  <!-- ══ HEADER ══════════════════════════════════════════ -->
+  <div class="header">
+    <div class="header-icon">✈</div>
+    <div class="header-text">
+      <h1>AeroTrack — Flight Operations Dashboard</h1>
+      <p>Design &amp; Architecture Explanation &nbsp;·&nbsp; phanindra.kasturi@gmail.com &nbsp;·&nbsp; June 2026</p>
+      <div class="badge-row">
+        <span class="badge">Angular 20</span>
+        <span class="badge">Angular Material</span>
+        <span class="badge">Leaflet + MarkerCluster</span>
+        <span class="badge">Signals + RxJS</span>
+        <span class="badge">Standalone Components</span>
+        <span class="badge">OnPush everywhere</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PURPOSE ════════════════════════════════════════ -->
+  <div class="card-full no-break">
+    <h2><span class="icon">🎯</span> Purpose &amp; Scope</h2>
+    AeroTrack is a real-time flight operations dashboard built as a single-page Angular 20 application.
+    It enables operations teams to monitor 20 live international flights on an interactive world map,
+    filter by status / route, inspect per-flight telemetry, and track KPI counts — all without a
+    backend server (data served from a bundled JSON mock).
+    The design goal was <strong>enterprise-grade UX with zero unnecessary abstractions</strong>: every
+    Angular 20 primitive (Signals, <code>toSignal</code>, standalone components, lazy routing) is used
+    where it genuinely simplifies the code.
+  </div>
+
+  <!-- ══ TECH STACK ═════════════════════════════════════ -->
+  <div class="card-full no-break">
+    <h2><span class="icon">🔧</span> Technology Stack</h2>
+    <div class="stack-grid">
+      <div class="stack-item">
+        <div class="lib">Angular 20.3</div>
+        <div class="ver">+ TypeScript 5.9</div>
+        <div class="role">Framework, router, DI, HTTP</div>
+      </div>
+      <div class="stack-item">
+        <div class="lib">Angular Material 20</div>
+        <div class="ver">+ CDK 20</div>
+        <div class="role">Table, cards, form fields, icons, theming</div>
+      </div>
+      <div class="stack-item">
+        <div class="lib">Leaflet 1.9 + MarkerCluster</div>
+        <div class="ver">canvas renderer</div>
+        <div class="role">Interactive world map, clustering, route lines</div>
+      </div>
+      <div class="stack-item">
+        <div class="lib">RxJS 7.8</div>
+        <div class="ver">combineLatest · shareReplay</div>
+        <div class="role">Filter pipeline, HTTP loading, debounce</div>
+      </div>
+      <div class="stack-item">
+        <div class="lib">Angular Signals</div>
+        <div class="ver">signal · computed · effect · toSignal</div>
+        <div class="role">KPIs, selection state, toggle flags</div>
+      </div>
+      <div class="stack-item">
+        <div class="lib">Reactive Forms</div>
+        <div class="ver">FormGroup + valueChanges</div>
+        <div class="role">Filter bar (search, status, origin, dest)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ARCHITECTURE ═══════════════════════════════════ -->
+  <div class="cols no-break">
+
+    <!-- Component Tree -->
+    <div class="card">
+      <h2><span class="icon">🗂</span> Component Structure</h2>
+      <div class="comp-tree">
+        <div class="item root">AppComponent (shell)</div>
+        <div class="group">
+          <div class="item">
+            <span class="name">DashboardPageComponent</span>
+            <span class="note">lazy route /dashboard</span>
+          </div>
+          <div class="sub">
+            <div class="item"><span class="name">HeaderComponent</span><span class="note">theme toggle</span></div>
+            <div class="item"><span class="name">KpiCardComponent ×6</span><span class="note">signal input</span></div>
+            <div class="item"><span class="name">FlightFiltersComponent</span><span class="note">ReactiveForms</span></div>
+            <div class="item"><span class="name">FlightMapComponent</span><span class="note">Leaflet, NgZone</span></div>
+            <div class="item"><span class="name">FlightListComponent</span><span class="note">MatTable + cards</span></div>
+            <div class="item"><span class="name">FlightDetailsComponent</span><span class="note">side-panel</span></div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="item"><span class="name">Shared</span></div>
+          <div class="sub">
+            <div class="item"><span class="name">StatusBadgeComponent</span></div>
+            <div class="item"><span class="name">SkeletonLoaderComponent</span></div>
+            <div class="item"><span class="name">FlightStatusPipe</span></div>
+            <div class="item"><span class="name">HighlightDirective</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Design -->
+    <div class="card">
+      <h2><span class="icon">⚙</span> FlightService State Machine</h2>
+      <p style="font-size:8.5pt;margin-bottom:8px;">
+        A single root-level service owns all shared state, keeping components
+        thin and avoiding prop-drilling.
+      </p>
+
+      <div style="font-size:8.5pt;line-height:1.65;">
+        <strong style="color:#0d47a1;">RxJS (async / stream)</strong><br>
+        <code>filter$</code> — BehaviorSubject; emits on every user input<br>
+        <code>allFlights$</code> — HTTP GET, <code>shareReplay(1)</code><br>
+        <code>filteredFlights$</code> — <code>combineLatest</code> + <code>debounceTime(300)</code><br>
+        <br>
+        <strong style="color:#0d47a1;">Signals (synchronous / derived)</strong><br>
+        <code>selectedFlight</code> — writable signal, set on map click<br>
+        <code>kpis</code> — <code>computed()</code> from all flights<br>
+        <code>filteredKpis</code> — <code>computed()</code> from filtered flights<br>
+        <code>uniqueOrigins / Destinations</code> — <code>computed()</code> for dropdowns<br>
+        <br>
+        <strong style="color:#0d47a1;">Bridge</strong><br>
+        <code>toSignal(filteredFlights$)</code> bridges the RxJS stream into
+        the Signal graph — consumed by the map's <code>effect()</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DATA FLOW ══════════════════════════════════════ -->
+  <div class="card-full no-break">
+    <h2><span class="icon">🔄</span> Data Flow</h2>
+    <div class="flow">
+      <div class="flow-box">
+        <div class="fb-title">JSON Mock</div>
+        <div class="fb-sub">assets/mock-data/<br>flights.json<br>(20 flights)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="fb-title">HttpClient</div>
+        <div class="fb-sub">allFlights$<br>shareReplay(1)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="fb-title">Filter Pipeline</div>
+        <div class="fb-sub">combineLatest<br>debounce 300 ms<br>applyFilters()</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="fb-title">toSignal()</div>
+        <div class="fb-sub">filteredFlightsSignal<br>bridges RxJS → Signals</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">
+        <div class="fb-title">Components</div>
+        <div class="fb-sub">Map effect()<br>List @input<br>KpiCard computed()</div>
+      </div>
+    </div>
+    <p style="font-size:8pt;color:#555;margin-top:8px;">
+      All components use <strong>ChangeDetectionStrategy.OnPush</strong> — re-render only on signal/input change or markForCheck.
+      The Leaflet map runs entirely <strong>outside Angular's zone</strong> (<code>NgZone.runOutsideAngular</code>),
+      re-entering only on marker click via <code>NgZone.run()</code>.
+    </p>
+  </div>
+
+  <!-- ══ KEY DESIGN DECISIONS ═══════════════════════════ -->
+  <div class="card-full no-break">
+    <h2><span class="icon">💡</span> Key Design Decisions</h2>
+    <ul class="decision-list">
+      <li>
+        <strong>Signals + RxJS hybrid</strong>
+        HTTP loading and filter debounce stay in RxJS (naturally async);
+        selection and KPIs use Signals (synchronous derived state). <code>toSignal()</code> is the seam.
+      </li>
+      <li>
+        <strong>Lazy-loaded dashboard route</strong>
+        <code>loadComponent()</code> on <code>/dashboard</code> — keeps the initial bundle minimal
+        and enables future route-level code-splitting.
+      </li>
+      <li>
+        <strong>Leaflet outside NgZone</strong>
+        All map DOM mutations happen off Angular's change-detection cycle,
+        preventing unnecessary app-wide checks on every mouse/tile event.
+      </li>
+      <li>
+        <strong>MarkerCluster + canvas renderer</strong>
+        Clusters prevent marker overlap at world zoom; <code>preferCanvas: true</code>
+        reduces DOM node count from ~100 marker elements to a single canvas element.
+      </li>
+      <li>
+        <strong>Standalone components only</strong>
+        No NgModules; every component declares its own imports. Eliminates
+        shared-module bloat and makes tree-shaking exact.
+      </li>
+      <li>
+        <strong>Responsive dual layout</strong>
+        FlightList renders a <code>mat-table</code> on wide viewports and
+        compact cards on mobile — same component, CSS grid breakpoints switch the template.
+      </li>
+    </ul>
+  </div>
+
+  <!-- ══ STATUS LEGEND & FILE MAP ═══════════════════════ -->
+  <div class="cols no-break">
+    <div class="card">
+      <h2><span class="icon">🟢</span> Flight Status Model</h2>
+      <div class="status-row">
+        <div class="status-chip" style="background:#E8F5E9;border-color:#2E7D32;color:#2E7D32">
+          <div class="status-dot" style="background:#2E7D32"></div>Active
+        </div>
+        <div class="status-chip" style="background:#E3F2FD;border-color:#1565C0;color:#1565C0">
+          <div class="status-dot" style="background:#1565C0"></div>Boarding
+        </div>
+        <div class="status-chip" style="background:#F5F5F5;border-color:#616161;color:#616161">
+          <div class="status-dot" style="background:#616161"></div>Scheduled
+        </div>
+        <div class="status-chip" style="background:#FFFDE7;border-color:#F9A825;color:#b07800">
+          <div class="status-dot" style="background:#F9A825"></div>Delayed
+        </div>
+        <div class="status-chip" style="background:#E3F2FD;border-color:#42A5F5;color:#1565C0">
+          <div class="status-dot" style="background:#42A5F5"></div>Arrived
+        </div>
+        <div class="status-chip" style="background:#FFEBEE;border-color:#C62828;color:#C62828">
+          <div class="status-dot" style="background:#C62828"></div>Cancelled
+        </div>
+      </div>
+      <p style="font-size:8pt;color:#555;margin-top:9px;">
+        Colour is the single source of truth: <code>STATUS_COLORS</code> constant feeds
+        map marker SVG fill, <code>StatusBadgeComponent</code>, and the details panel —
+        no per-component colour duplication.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📁</span> Source Layout</h2>
+      <div style="font-size:8pt;line-height:1.75;font-family:monospace;">
+        src/app/<br>
+        &nbsp;&nbsp;core/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;models/ &nbsp;&nbsp;<span style="font-family:sans-serif;color:#555">Flight, FilterState, KpiData</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;constants/ &nbsp;<span style="font-family:sans-serif;color:#555">STATUS_COLORS, MAP_CONFIG</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;services/ &nbsp;&nbsp;<span style="font-family:sans-serif;color:#555">ThemeService</span><br>
+        &nbsp;&nbsp;features/flight-dashboard/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;services/ &nbsp;&nbsp;<span style="font-family:sans-serif;color:#555">FlightService</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;components/ &nbsp;<span style="font-family:sans-serif;color:#555">header, map, list, filters, details</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;pages/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-family:sans-serif;color:#555">DashboardPageComponent</span><br>
+        &nbsp;&nbsp;shared/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;components/ &nbsp;<span style="font-family:sans-serif;color:#555">kpi-card, status-badge, skeleton</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;pipes/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-family:sans-serif;color:#555">FlightStatusPipe</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;directives/ &nbsp;<span style="font-family:sans-serif;color:#555">HighlightDirective</span><br>
+        src/assets/mock-data/flights.json
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══════════════════════════════════════════ -->
+  <div class="footer">
+    <span><strong>AeroTrack</strong> — Angular 20 Flight Operations Dashboard</span>
+    <span>phanindra.kasturi@gmail.com &nbsp;·&nbsp; June 2026 &nbsp;·&nbsp; 1 page</span>
+  </div>
+
+</div>
+</body>
+</html>

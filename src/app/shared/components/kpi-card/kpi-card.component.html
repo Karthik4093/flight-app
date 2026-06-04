@@ -1,0 +1,9 @@
+<div class="kpi-card" [style.--kpi-color]="color()">
+  <div class="kpi-icon-wrap">
+    <mat-icon [attr.aria-hidden]="true">{{ icon() }}</mat-icon>
+  </div>
+  <div class="kpi-body">
+    <span class="kpi-value">{{ value() }}</span>
+    <span class="kpi-label">{{ label() }}</span>
+  </div>
+</div>
