@@ -48,13 +48,15 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
   private platformId    = inject(PLATFORM_ID);
 
   private map!: L.Map;
-  private clusterGroup!: L.MarkerClusterGroup;
+  private markerLayer!: L.LayerGroup;
+  private clusterGroup: L.MarkerClusterGroup | null = null;
   private airportLayer!: L.LayerGroup;
   private routeLayer!:   L.LayerGroup;
   private weatherLayer!: L.TileLayer;
   private resizeObserver!: ResizeObserver;
 
   private flightMarkers = new Map<string, L.Marker>();
+  private hasFitInitialFlights = false;
 
   showAirports = signal(false);
   showWeather  = signal(false);
@@ -109,7 +111,7 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
     this.routeLayer?.clearLayers();
-    this.clusterGroup?.clearLayers();
+    this.clearFlightLayers();
     this.map?.off();
     this.map?.remove();
   }
@@ -134,17 +136,21 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
     }).addTo(this.map);
 
     const clusterFactory = getMarkerClusterGroup();
-    if (!clusterFactory) throw new Error('leaflet.markercluster not loaded');
-
-    this.clusterGroup = clusterFactory({
-      maxClusterRadius: 55,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
-      chunkedLoading: true,
-      iconCreateFunction: (cluster: L.MarkerCluster) => this.buildClusterIcon(cluster),
-    });
-    this.map.addLayer(this.clusterGroup);
+    if (clusterFactory) {
+      this.clusterGroup = clusterFactory({
+        maxClusterRadius: 55,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        chunkedLoading: true,
+        iconCreateFunction: (cluster: L.MarkerCluster) => this.buildClusterIcon(cluster),
+      });
+      this.markerLayer = this.clusterGroup;
+    } else {
+      console.warn('[FlightMap] marker clustering unavailable; rendering direct markers.');
+      this.markerLayer = L.layerGroup();
+    }
+    this.map.addLayer(this.markerLayer);
 
     this.airportLayer = L.layerGroup();
     this.routeLayer   = L.layerGroup().addTo(this.map);
@@ -156,17 +162,18 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
   }
 
   private renderFlights(flights: Flight[]): void {
-    if (!this.clusterGroup) return;
-    this.clusterGroup.clearLayers();
+    if (!this.markerLayer) return;
+    this.clearFlightLayers();
     this.flightMarkers.clear();
 
     for (const flight of flights) {
       const marker = this.buildFlightMarker(flight);
       this.flightMarkers.set(flight.id, marker);
-      this.clusterGroup.addLayer(marker);
+      this.markerLayer.addLayer(marker);
     }
 
     if (this.showAirports()) this.renderAirports(flights);
+    this.fitInitialFlights(flights);
   }
 
   private buildFlightMarker(flight: Flight): L.Marker {
@@ -318,12 +325,36 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
     if (marker) {
       setTimeout(() => {
         this.zone.runOutsideAngular(() => {
-          this.clusterGroup.zoomToShowLayer(marker, () => {
+          if (this.clusterGroup) {
+            this.clusterGroup.zoomToShowLayer(marker, () => {
+              marker.openPopup();
+            });
+            return;
+          }
+          if (this.map.hasLayer(marker)) {
             marker.openPopup();
-          });
+          }
         });
       }, 1100);
     }
+  }
+
+  private clearFlightLayers(): void {
+    this.markerLayer?.clearLayers();
+  }
+
+  private fitInitialFlights(flights: Flight[]): void {
+    if (this.hasFitInitialFlights || !flights.length || this.flightService.selectedFlight()) return;
+    this.hasFitInitialFlights = true;
+
+    const bounds = L.latLngBounds(
+      flights.map((f) => [f.currentPosition.lat, f.currentPosition.lng] as L.LatLngTuple)
+    );
+
+    requestAnimationFrame(() => {
+      this.map.invalidateSize({ animate: false });
+      this.map.fitBounds(bounds, { padding: [48, 48], maxZoom: 3, animate: false });
+    });
   }
 
   private renderAirports(flights: Flight[]): void {
