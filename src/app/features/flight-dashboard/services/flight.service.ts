@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, map, shareReplay, startWith } from 'rxjs';
+import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, map, of, shareReplay, startWith } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Flight, FilterState, FlightStatus, KpiData } from '../../../core/models/flight.model';
 
@@ -20,7 +21,10 @@ export class FlightService {
 
   private readonly allFlights$ = this.http
     .get<Flight[]>('assets/mock-data/flights.json')
-    .pipe(shareReplay(1));
+    .pipe(
+      catchError(() => of([] as Flight[])),
+      shareReplay(1),
+    );
 
   readonly allFlightsSignal = toSignal(this.allFlights$, { initialValue: [] });
 

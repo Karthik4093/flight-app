@@ -5,6 +5,7 @@ import {
   ElementRef,
   NgZone,
   OnDestroy,
+  PLATFORM_ID,
   ViewChild,
   effect,
   inject,
@@ -12,6 +13,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import * as L from 'leaflet';
 import 'leaflet.markercluster';
 import { Flight, FlightStatus } from '../../../../core/models/flight.model';
@@ -22,8 +24,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 type MarkerClusterGroupFactory = (opts?: object) => L.MarkerClusterGroup;
-const markerClusterGroup = (): MarkerClusterGroupFactory =>
-  (L as unknown as { markerClusterGroup: MarkerClusterGroupFactory }).markerClusterGroup;
+
+function getMarkerClusterGroup(): MarkerClusterGroupFactory | null {
+  const fn = (L as unknown as Record<string, unknown>)['markerClusterGroup'];
+  return typeof fn === 'function' ? (fn as MarkerClusterGroupFactory) : null;
+}
 
 @Component({
   selector: 'app-flight-map',
@@ -40,6 +45,7 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
 
   private flightService = inject(FlightService);
   private zone          = inject(NgZone);
+  private platformId    = inject(PLATFORM_ID);
 
   private map!: L.Map;
   private clusterGroup!: L.MarkerClusterGroup;
@@ -79,18 +85,24 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
     this.zone.runOutsideAngular(() => {
-      this.initMap();
-      this.renderFlights(this.flights());
+      try {
+        this.initMap();
+        this.renderFlights(this.flights());
 
-      requestAnimationFrame(() => {
-        this.map.invalidateSize({ animate: false });
-      });
+        requestAnimationFrame(() => {
+          this.map?.invalidateSize({ animate: false });
+        });
 
-      this.resizeObserver = new ResizeObserver(() => {
-        this.map.invalidateSize({ animate: false, pan: false });
-      });
-      this.resizeObserver.observe(this.mapEl.nativeElement);
+        this.resizeObserver = new ResizeObserver(() => {
+          this.map?.invalidateSize({ animate: false, pan: false });
+        });
+        this.resizeObserver.observe(this.mapEl.nativeElement);
+      } catch (err) {
+        console.error('[FlightMap] init failed:', err);
+      }
     });
   }
 
@@ -121,7 +133,10 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
       crossOrigin: true,
     }).addTo(this.map);
 
-    this.clusterGroup = markerClusterGroup()({
+    const clusterFactory = getMarkerClusterGroup();
+    if (!clusterFactory) throw new Error('leaflet.markercluster not loaded');
+
+    this.clusterGroup = clusterFactory({
       maxClusterRadius: 55,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
@@ -141,6 +156,7 @@ export class FlightMapComponent implements AfterViewInit, OnDestroy {
   }
 
   private renderFlights(flights: Flight[]): void {
+    if (!this.clusterGroup) return;
     this.clusterGroup.clearLayers();
     this.flightMarkers.clear();
 
